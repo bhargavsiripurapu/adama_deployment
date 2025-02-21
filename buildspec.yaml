@@ -1,0 +1,49 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "ap-south-1"
+    ECR_REPO: "adama-internal"
+    IMAGE_TAG: "latest"
+    K8S_NAMESPACE: "default"
+    AWS_ACCOUNT_ID: "600941914653"
+    EKS_CLUSTER_NAME: "prod-nrl-adama_internal"
+
+  secrets-manager:
+    GITHUB_TOKEN: "github-token-id"  # AWS Secrets Manager for GitHub Token
+
+phases:
+  pre_build:
+    commands:
+      - echo "Logging in to Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - echo "Cloning repository from GitHub..."
+      - git clone https://$GITHUB_TOKEN@github.com/bhargavsiripurapu/app-Jenkins-eks-CI-CD.git
+      - cd app-Jenkins-eks-CI-CD
+
+  build:
+    commands:
+      - echo "Building the Docker image..."
+      - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG -f login-app/Dockerfile .
+      - echo "Tagging the Docker image..."
+      - docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+
+  post_build:
+    commands:
+      - echo "Pushing Docker image to Amazon ECR..."
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+      - echo "Updating Kubernetes deployment file..."
+      - sed -i "s|<IMAGE_PLACEHOLDER>|$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG|g" deployment.yaml
+      - echo "Configuring AWS CLI and updating kubeconfig..."
+      - aws eks --region $AWS_REGION update-kubeconfig --name $EKS_CLUSTER_NAME
+      - echo "Deploying application to EKS..."
+      - kubectl apply -f deployment.yaml
+      - kubectl apply -f service.yaml
+      - kubectl apply -f ingress.yaml
+      - echo "Deployment completed successfully!"
+
+artifacts:
+  files:
+    - deployment.yaml
+    - service.yaml
+    - ingress.yaml
