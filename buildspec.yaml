@@ -3,7 +3,7 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "ap-south-1"
-    ECR_REPO: "adama-internal"
+    ECR_REPO: "adama_internal"
     IMAGE_TAG: "latest"
     K8S_NAMESPACE: "default"
     AWS_ACCOUNT_ID: "600941914653"
@@ -18,7 +18,7 @@ phases:
       - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - echo "Cloning repository from GitHub..."
-      - git clone https://$GITHUB_TOKEN@github.com/bhargavsiripurapu/app-Jenkins-eks-CI-CD.git
+      - git clone https://github.com/bhargavsiripurapu/adama_deployment.git
       - cd app-Jenkins-eks-CI-CD
 
   build:
