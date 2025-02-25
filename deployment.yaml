@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nrl-app
+  name: adama-app
   labels:
-    app: nrl-app
+    app: adama-app
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: nrl-app
+      app: adama-app
   template:
     metadata:
       labels:
-        app: nrl-app
+        app: adama-app
     spec:
       containers:
-      - name: nrl-app-container
+      - name: adama-app-container
         image: 600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal:latest
         ports:
         - containerPort: 80
