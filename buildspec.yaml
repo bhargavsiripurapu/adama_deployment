@@ -7,8 +7,8 @@ env:
     IMAGE_TAG: "latest"
     AWS_ACCOUNT_ID: "600941914653"
     CLUSTER_NAME: "prod-adama-Adama-internal"
-
- secrets-manager:
+  
+  secrets-manager:
     GITHUB_TOKEN: "github-token-id"  # AWS Secrets Manager for GitHub Token
     
 phases:
