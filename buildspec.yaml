@@ -13,8 +13,8 @@ phases:
   pre_build:
     commands:
       - echo "Checking out the code..."
-      - git clone https://github.com/bhargavsiripurapu/app-Jenkins-eks-CI-CD.git
-      - cd app-Jenkins-eks-CI-CD
+      - git clone https://github.com/bhargavsiripurapu/adama_deployment.git
+      - cd adama_deployment
       - echo "Logging in to Amazon ECR..."
       - |
         aws ecr get-login-password --region $AWS_REGION | \
