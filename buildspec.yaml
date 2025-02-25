@@ -11,9 +11,21 @@ env:
   secrets-manager:
     GITHUB_TOKEN: "github-token-id"  # AWS Secrets Manager for GitHub Token
 
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: "ap-south-1"
+    AWS_ACCOUNT_ID: "600941914653"
+
 phases:
   pre_build:
     commands:
+      - echo "Setting AWS variables..."
+      - export AWS_REGION="ap-south-1"
+      - export AWS_ACCOUNT_ID="600941914653"
+      - echo "AWS_REGION: $AWS_REGION"
+      - echo "AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID"
       - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
       - echo "Cloning repository from GitHub..."
