@@ -3,34 +3,40 @@ version: 0.2
 env:
   variables:
     AWS_REGION: "ap-south-1"
-    ECR_REPOSITORY: "600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal"
+    ECR_REPO: "adama_internal"
+    IMAGE_TAG: "latest"
+    AWS_ACCOUNT_ID: "600941914653"
     CLUSTER_NAME: "prod-adama-Adama-internal"
-    DEPLOYMENT_NAME: "adama-app"
 
 phases:
   pre_build:
     commands:
+      - echo "Checking out the code..."
+      - git clone https://github.com/bhargavsiripurapu/adama_deployment.git
+      - cd adama_deployment
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
-      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c1-7)  # Shortened commit hash
-      - echo "Image tag: $IMAGE_TAG"
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
   build:
     commands:
       - echo "Building the Docker image..."
-      - docker build -t "$ECR_REPOSITORY:$IMAGE_TAG" .
+      - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG -f login-app/Dockerfile .
       - echo "Pushing the Docker image to ECR..."
-      - docker push "$ECR_REPOSITORY:$IMAGE_TAG"
+      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
 
   post_build:
     commands:
-      - echo "Updating deployment file with new image..."
-      - sed -i "s|image: .*|image: $ECR_REPOSITORY:$IMAGE_TAG|g" deployment.yaml
-      - echo "Applying deployment to EKS..."
-      - aws eks update-kubeconfig --region "$AWS_REGION" --name "$CLUSTER_NAME"
+      - echo "Updating Kubernetes deployment file with new image..."
+      - sed -i 's|image:.*|image: '"$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG"'|' deployment.yaml
+
+      - echo "Updating kubeconfig for EKS cluster..."
+      - aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME
+
+      - echo "Applying Kubernetes manifests..."
       - kubectl apply -f deployment.yaml
       - kubectl apply -f service.yaml
       - kubectl apply -f ingress.yaml
+
       - echo "Deployment completed successfully!"
 
 artifacts:
