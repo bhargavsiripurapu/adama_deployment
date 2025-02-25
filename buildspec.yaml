@@ -19,7 +19,7 @@ phases:
       - export AWS_REGION="ap-south-1"
       - export AWS_ACCOUNT_ID="600941914653"
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 600941914653.dkr.ecr.ap-south-1.amazonaws.com
       - echo "Cloning repository from GitHub..."
       - git clone https://github.com/bhargavsiripurapu/adama_deployment.git
       - cd adama_deployment || exit 1  # Ensuring `cd` does not fail silently
