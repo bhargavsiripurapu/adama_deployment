@@ -15,15 +15,13 @@ phases:
   pre_build:
     commands:
       - echo "Retrieving GitHub token from Secrets Manager..."
-      - export GITHUB_AUTH="https://bhargavsiripurapu:$GITHUB_TOKEN@github.com"
       - echo "Checking out the code..."
-      - git clone $GITHUB_AUTH/bhargavsiripurapu/adama_deployment.git
+      - git clone https://$GITHUB_TOKEN@github.com/bhargavsiripurapu/adama_deployment.git
       - cd adama_deployment
       - echo "Logging in to Amazon ECR..."
       - |
         aws ecr get-login-password --region $AWS_REGION | \
         docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-
 
   build:
     commands:
