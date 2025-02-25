@@ -2,13 +2,15 @@ version: 0.2
 
 env:
   variables:
-    AWS_REGION: "ap-south-2"
-    ECR_REPO: "nrl-internal"
+    AWS_REGION: "ap-south-1"
+    ECR_REPO: "adama_internal"
     IMAGE_TAG: "latest"
-    K8S_NAMESPACE: "default"
-    AWS_ACCOUNT_ID: "090814668573"
-    CLUSTER_NAME: "prod-nrl-nrl_internal"
+    AWS_ACCOUNT_ID: "600941914653"
+    CLUSTER_NAME: "prod-adama-Adama-internal"
 
+ secrets-manager:
+    GITHUB_TOKEN: "github-token-id"  # AWS Secrets Manager for GitHub Token
+    
 phases:
   pre_build:
     commands:
