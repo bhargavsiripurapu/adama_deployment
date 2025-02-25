@@ -20,7 +20,6 @@ phases:
       - export GITHUB_AUTH="https://bhargavsiripurapu:${GITHUB_TOKEN}@github.com"
       - echo "Checking out the code..."
       - git clone $GITHUB_AUTH/bhargavsiripurapu/adama_deployment.git || echo "Git clone failed!"
-      - cd adama_deployment
       - echo "Logging in to Amazon ECR..."
       - |
         aws ecr get-login-password --region $AWS_REGION | \
