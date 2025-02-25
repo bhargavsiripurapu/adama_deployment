@@ -25,7 +25,7 @@ phases:
   post_build:
     commands:
       - echo "Updating deployment file with new image..."
-      - sed -i 's|image: .*|image: '"$ECR_REPOSITORY:$IMAGE_TAG"'|g' deployment.yaml
+      - sed -i 's|image: .*$|image: '"$ECR_REPOSITORY:$IMAGE_TAG"'|g' deployment.yaml
       - echo "Applying deployment to EKS..."
       - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
       - kubectl apply -f deployment.yaml
