@@ -54,3 +54,5 @@ artifacts:
     - deployment.yaml
     - service.yaml
     - ingress.yaml
+
+    
