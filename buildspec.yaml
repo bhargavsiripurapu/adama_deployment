@@ -21,26 +21,26 @@ phases:
       - echo "AWS_REGION: $AWS_REGION"
       - echo "AWS_ACCOUNT_ID: $AWS_ACCOUNT_ID"
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
       - echo "Cloning repository from GitHub..."
       - git clone https://github.com/bhargavsiripurapu/adama_deployment.git
-      - cd adama_deployment/app-Jenkins-eks-CI-CD
+      - cd adama_deployment || exit 1  # Ensure `cd` command does not cause a pipeline failure
 
   build:
     commands:
       - echo "Building the Docker image..."
-      - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG -f login-app/Dockerfile .
+      - docker build -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG" -f login-app/Dockerfile .
       - echo "Tagging the Docker image..."
-      - docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+      - docker tag "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG" "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG"
 
   post_build:
     commands:
       - echo "Pushing Docker image to Amazon ECR..."
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+      - docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG"
       - echo "Updating Kubernetes deployment file..."
       - sed -i "s|<IMAGE_PLACEHOLDER>|$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG|g" deployment.yaml
       - echo "Configuring AWS CLI and updating kubeconfig..."
-      - aws eks --region $AWS_REGION update-kubeconfig --name $EKS_CLUSTER_NAME
+      - aws eks --region "$AWS_REGION" update-kubeconfig --name "$EKS_CLUSTER_NAME"
       - echo "Deploying application to EKS..."
       - kubectl apply -f deployment.yaml
       - kubectl apply -f service.yaml
