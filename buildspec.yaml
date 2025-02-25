@@ -16,28 +16,33 @@ phases:
       - git clone https://github.com/bhargavsiripurapu/app-Jenkins-eks-CI-CD.git
       - cd app-Jenkins-eks-CI-CD
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - |
+        aws ecr get-login-password --region $AWS_REGION | \
+        docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
   build:
     commands:
       - echo "Building the Docker image..."
-      - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG -f login-app/Dockerfile .
+      - |
+        docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG \
+        -f login-app/Dockerfile .
       - echo "Pushing the Docker image to ECR..."
-      - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+      - |
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
 
   post_build:
     commands:
       - echo "Updating Kubernetes deployment file with new image..."
-      - sed -i "s|image:.*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG|" deployment.yaml
-
+      - |
+        sed -i "s|image:.*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG|" deployment.yaml
       - echo "Updating kubeconfig for EKS cluster..."
-      - aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME
-
+      - |
+        aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME
       - echo "Applying Kubernetes manifests..."
-      - kubectl apply -f deployment.yaml
-      - kubectl apply -f service.yaml
-      - kubectl apply -f ingress.yaml
-
+      - |
+        kubectl apply -f deployment.yaml
+        kubectl apply -f service.yaml
+        kubectl apply -f ingress.yaml
       - echo "Deployment completed successfully!"
 
 artifacts:
