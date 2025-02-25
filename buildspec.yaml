@@ -7,7 +7,7 @@ env:
     IMAGE_TAG: "latest"
     K8S_NAMESPACE: "default"
     AWS_ACCOUNT_ID: "600941914653"
-    EKS_CLUSTER_NAME: "prod-nrl-adama_internal"
+    EKS_CLUSTER_NAME: "prod-adama-Adama-internal"
 
   secrets-manager:
     GITHUB_TOKEN: "github-token-id"  # AWS Secrets Manager for GitHub Token
