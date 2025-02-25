@@ -14,10 +14,10 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "Retrieving GitHub token from Secrets Manager..."
-      - GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id github-token-id --query SecretString --output text)
+      - echo "Retrieving GitHub token from AWS Secrets Manager..."
+      - export GITHUB_TOKEN=$(aws secretsmanager get-secret-value --secret-id github-token-id --query SecretString --output text)
       - echo "Checking out the code..."
-      - git clone https://$GITHUB_TOKEN@github.com/bhargavsiripurapu/adama_deployment.git
+      - git clone https://bhargavsiripurapu:$GITHUB_TOKEN@github.com/bhargavsiripurapu/adama_deployment.git
       - cd adama_deployment
       - echo "Logging in to Amazon ECR..."
       - |
