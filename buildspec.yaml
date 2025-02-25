@@ -5,7 +5,6 @@ env:
     AWS_REGION: "ap-south-1"
     ECR_REPO: "adama_internal"
     IMAGE_TAG: "latest"
-    K8S_NAMESPACE: "default"
     AWS_ACCOUNT_ID: "600941914653"
     EKS_CLUSTER_NAME: "prod-adama-Adama-internal"
 
