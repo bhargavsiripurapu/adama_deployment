@@ -4,7 +4,7 @@ env:
   variables:
     AWS_REGION: "ap-south-1"
     ECR_REPOSITORY: "600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal"
-    CLUSTER_NAME: "your-eks-cluster-name"
+    CLUSTER_NAME: "prod-adama-Adama-internal"
     DEPLOYMENT_NAME: "adama-app"
 
 phases:
@@ -18,16 +18,16 @@ phases:
   build:
     commands:
       - echo "Building the Docker image..."
-      - docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+      - docker build -t "$ECR_REPOSITORY:$IMAGE_TAG" .
       - echo "Pushing the Docker image to ECR..."
-      - docker push $ECR_REPOSITORY:$IMAGE_TAG
+      - docker push "$ECR_REPOSITORY:$IMAGE_TAG"
 
   post_build:
     commands:
       - echo "Updating deployment file with new image..."
-      - sed -i 's|image: .*$|image: '"$ECR_REPOSITORY:$IMAGE_TAG"'|g' deployment.yaml
+      - sed -i 's|image: .*|image: '"$ECR_REPOSITORY:$IMAGE_TAG"'|' deployment.yaml
       - echo "Applying deployment to EKS..."
-      - aws eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
+      - aws eks update-kubeconfig --region "$AWS_REGION" --name "$CLUSTER_NAME"
       - kubectl apply -f deployment.yaml
       - kubectl apply -f service.yaml
       - kubectl apply -f ingress.yaml
