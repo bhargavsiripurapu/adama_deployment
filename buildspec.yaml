@@ -8,23 +8,29 @@ env:
     AWS_ACCOUNT_ID: "600941914653"
     CLUSTER_NAME: "prod-adama-Adama-internal"
 
-  secrets-manager:
-    GITHUB_TOKEN: "github-token-id"  # AWS Secrets Manager for GitHub Token
 phases:
   pre_build:
     commands:
       - echo "Checking AWS CLI Version..."
       - aws --version
+
+      - echo "Configuring AWS CLI with Access Key and Secret Key from CodeBuild Environment..."
+      - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+      - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+      - aws configure set region $AWS_REGION
+      - aws configure list
+
       - echo "Verifying AWS Identity..."
       - aws sts get-caller-identity
+
       - echo "Checking ECR Token..."
-      - aws ecr get-login-password --region ap-south-1 | head -c 10  # Show only first 10 chars
+      - aws ecr get-login-password --region $AWS_REGION | head -c 10  # Show only first 10 chars
+
       - echo "Testing Docker access..."
       - docker info
+
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 600941914653.dkr.ecr.ap-south-1.amazonaws.com
-
-
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
   build:
     commands:
@@ -32,6 +38,7 @@ phases:
       - |
         docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG \
         -f login-app/Dockerfile .
+
       - echo "Pushing the Docker image to ECR..."
       - |
         docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
@@ -41,14 +48,17 @@ phases:
       - echo "Updating Kubernetes deployment file with new image..."
       - |
         sed -i "s|image:.*|image: $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG|" deployment.yaml
+
       - echo "Updating kubeconfig for EKS cluster..."
       - |
         aws eks --region $AWS_REGION update-kubeconfig --name $CLUSTER_NAME
+
       - echo "Applying Kubernetes manifests..."
       - |
         kubectl apply -f deployment.yaml
         kubectl apply -f service.yaml
         kubectl apply -f ingress.yaml
+
       - echo "Deployment completed successfully!"
 
 artifacts:
