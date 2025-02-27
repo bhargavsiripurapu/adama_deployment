@@ -2,45 +2,39 @@ version: 0.2
 
 env:
   variables:
-    AWS_ACCOUNT_ID: "600941914653"
-    REGION: "ap-south-1"
-    ECR_REPOSITORY: "600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal"
-    CLUSTER_NAME: "prod-adama-Adama-internal"
-    DEPLOYMENT_FILE: "deployment.yaml"
-    SERVICE_FILE: "service.yaml"
-    INGRESS_FILE: "ingress.yaml"
+    AWS_ACCOUNT_ID: 600941914653
+    AWS_REGION: ap-south-1
+    ECR_REPOSITORY: 600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal
+    CLUSTER_NAME: prod-adama-Adama-internal
+    DEPLOYMENT_FILE: deployment.yaml
 
 phases:
   pre_build:
     commands:
-      - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$ECR_REPOSITORY"
-      
-      - echo "Retrieving commit hash for image tagging..."
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
 
   build:
     commands:
-      - echo "Building Docker image..."
-      - docker build -t "$ECR_REPOSITORY:latest" .
-      - docker tag "$ECR_REPOSITORY:latest" "$ECR_REPOSITORY:$IMAGE_TAG"
+      - echo Building Docker image...
+      - docker build -t $ECR_REPOSITORY:latest .
+      - docker tag $ECR_REPOSITORY:latest $ECR_REPOSITORY:$IMAGE_TAG
 
   post_build:
     commands:
-      - echo "Pushing Docker image to Amazon ECR..."
-      - docker push "$ECR_REPOSITORY:latest"
-      - docker push "$ECR_REPOSITORY:$IMAGE_TAG"
+      - echo Pushing Docker image to Amazon ECR...
+      - docker push $ECR_REPOSITORY:latest
+      - docker push $ECR_REPOSITORY:$IMAGE_TAG
 
-      - echo "Updating deployment.yaml with new image tag..."
-      - sed -i "s|image:.*|image: $ECR_REPOSITORY:$IMAGE_TAG|" "$DEPLOYMENT_FILE"
+      - echo Updating deployment.yaml with new image tag...
+      - sed -i "s|image:.*|image: $ECR_REPOSITORY:$IMAGE_TAG|" $DEPLOYMENT_FILE
 
-      - echo "Configuring kubectl for EKS..."
-      - aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$REGION"
+      - echo Configuring kubectl for EKS...
+      - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
 
-      - echo "Applying Kubernetes manifests..."
-      - kubectl apply -f "$DEPLOYMENT_FILE"
-      - kubectl apply -f "$SERVICE_FILE"
-      - kubectl apply -f "$INGRESS_FILE"
-
-      - echo "Deployment to EKS completed!"
+      - echo Deploying application to EKS...
+      - kubectl apply -f deployment.yaml
+      - kubectl apply -f service.yaml
+      - kubectl apply -f ingress.yaml
