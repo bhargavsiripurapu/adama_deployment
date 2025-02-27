@@ -28,7 +28,7 @@ phases:
       - docker push $ECR_REPOSITORY:$IMAGE_TAG
 
       - echo Updating deployment.yaml with new image tag...
-      - sed -i "s|image: $ECR_REPOSITORY:[a-zA-Z0-9_\-]*|image: $ECR_REPOSITORY:$IMAGE_TAG|" $DEPLOYMENT_FILE
+      - sed -i 's|image: '$ECR_REPOSITORY':[a-zA-Z0-9_\-]*|image: '$ECR_REPOSITORY':'$IMAGE_TAG'|' $DEPLOYMENT_FILE
 
       - echo Configuring kubectl for EKS...
       - aws eks update-kubeconfig --name $CLUSTER_NAME --region $REGION
