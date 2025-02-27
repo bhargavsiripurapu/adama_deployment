@@ -2,17 +2,17 @@ version: 0.2
 
 env:
   variables:
-    ECR_REPOSITORY: 600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal
-    CLUSTER_NAME: prod-adama-Adama-internal
-    REGION: ap-south-1
-    DEPLOYMENT_FILE: deployment.yaml  # Ensure correct path if it's in a subfolder
+    ECR_REPOSITORY: "600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal"
+    CLUSTER_NAME: "prod-adama-Adama-internal"
+    REGION: "ap-south-1"
+    DEPLOYMENT_FILE: "deployment.yaml"
 
 phases:
   pre_build:
     commands:
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - aws ecr get-login-password --region "$REGION" | docker login --username AWS --password-stdin "$ECR_REPOSITORY"
+      - COMMIT_HASH=$(echo "$CODEBUILD_RESOLVED_SOURCE_VERSION" | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:-latest}
 
   build:
@@ -27,8 +27,17 @@ phases:
       - docker push "$ECR_REPOSITORY:latest"
       - docker push "$ECR_REPOSITORY:$IMAGE_TAG"
 
+      - echo "Checking environment variables..."
+      - echo "ECR_REPOSITORY: $ECR_REPOSITORY"
+      - echo "IMAGE_TAG: $IMAGE_TAG"
+      - echo "DEPLOYMENT_FILE: $DEPLOYMENT_FILE"
+
+      - echo "Fixing deployment.yaml format..."
+      - dos2unix "$DEPLOYMENT_FILE"
+
       - echo "Updating deployment.yaml with new image tag..."
-      - sed -i "s|image:.*|image: $ECR_REPOSITORY:$IMAGE_TAG|" "$DEPLOYMENT_FILE"
+      - |
+        sed -i 's|image: .*|image: '"${ECR_REPOSITORY}:${IMAGE_TAG}"'|' "$DEPLOYMENT_FILE"
 
       - echo "Configuring kubectl for EKS..."
       - aws eks update-kubeconfig --name "$CLUSTER_NAME" --region "$REGION"
