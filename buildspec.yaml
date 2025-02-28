@@ -11,44 +11,36 @@ env:
 phases:
   pre_build:
     commands:
-      - echo "=== Logging in to Amazon ECR ===" | tee pre_build.log
-      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY | tee -a pre_build.log
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7) | tee -a pre_build.log
-      - IMAGE_TAG=${COMMIT_HASH:=latest} | tee -a pre_build.log
-      - echo "Using Image Tag: $IMAGE_TAG" | tee -a pre_build.log
+      - echo "=== Logging in to Amazon ECR ==="
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:-latest}  # Fix: Ensure IMAGE_TAG is never empty
+      - echo "Using Image Tag: $IMAGE_TAG"
 
   build:
     commands:
-      - echo "=== Building Docker Image ===" | tee build.log
-      - docker build -t adama_internal -f login-app/Dockerfile login-app/ | tee -a build.log
-      - docker tag adama_internal:latest $ECR_REPOSITORY:latest | tee -a build.log
+      - echo "=== Building Docker Image ==="
+      - docker build -t adama_internal -f login-app/Dockerfile login-app/
+      - docker tag adama_internal:latest $ECR_REPOSITORY:$IMAGE_TAG  # Fix: Ensure proper formatting
 
   post_build:
     commands:
-      - echo "=== Pushing Docker Image to Amazon ECR ===" | tee post_build.log
-      - docker push $ECR_REPOSITORY:latest | tee -a post_build.log
+      - echo "=== Pushing Docker Image to Amazon ECR ==="
+      - docker push $ECR_REPOSITORY:$IMAGE_TAG
 
-      - echo "=== Updating Deployment YAML ===" | tee -a post_build.log
-      - sed -i 's@CONTAINER_IMAGE@'"$ECR_REPOSITORY:$IMAGE_TAG"'@' $DEPLOYMENT_FILE | tee -a post_build.log
+      - echo "=== Updating Deployment YAML ==="
+      - sed -i "s@CONTAINER_IMAGE@$ECR_REPOSITORY:$IMAGE_TAG@g" $DEPLOYMENT_FILE
 
-      - echo "=== Configuring kubectl for EKS ===" | tee -a post_build.log
-      - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION | tee -a post_build.log
+      - echo "=== Configuring kubectl for EKS ==="
+      - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
 
-      - echo "=== Deploying Application to EKS ===" | tee -a post_build.log
-      - kubectl apply -f $DEPLOYMENT_FILE | tee -a post_build.log
-      - kubectl apply -f service.yaml | tee -a post_build.log
-      - kubectl apply -f ingress.yaml | tee -a post_build.log
-
-      - echo "=== Deployment Completed ===" | tee -a post_build.log
+      - echo "=== Deploying Application to EKS ==="
+      - kubectl apply -f $DEPLOYMENT_FILE
+      - kubectl apply -f service.yaml
+      - kubectl apply -f ingress.yaml
 
 artifacts:
   files:
     - deployment.yaml
     - service.yaml
     - ingress.yaml
-
-logs:
-  cloudwatch:
-    group_name: "/aws/codebuild/prod-adama-Adama-internal"
-    stream_name: "build-logs"
-    enabled: true
