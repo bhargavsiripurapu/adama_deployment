@@ -19,7 +19,7 @@ phases:
   build:
     commands:
       - echo Building Docker image...
-      - docker build -t adama_internal -f login-app/Dockerfile login-app
+      - docker build -t adama_internal -f login-app/Dockerfile .
       - docker tag adama_internal:latest 600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal:latest
 
   post_build:
