@@ -36,7 +36,8 @@ phases:
       - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
 
       - echo "Updating deployment.yaml with new container images..."
-      - sed -i 's@APP_IMAGE@'"$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"'@' $DEPLOYMENT_FILE
+      #sed -i 's@APP_IMAGE@'"$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"'@' $DEPLOYMENT_FILE
+      - sed -i 's@image: .*@image: '"$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"'@' $DEPLOYMENT_FILE
 
       - echo "Displaying updated deployment.yaml..."
       - cat $DEPLOYMENT_FILE
