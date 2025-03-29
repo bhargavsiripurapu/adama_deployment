@@ -10,22 +10,22 @@ env:
 
 phases:
   pre_build:
-  commands:
-    - echo Logging in to Amazon ECR...
-    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
-    - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-    - TIMESTAMP=$(date +%s)
-    - IMAGE_TAG=${COMMIT_HASH}-${TIMESTAMP}
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - TIMESTAMP=$(date +%s)
+      - IMAGE_TAG=${COMMIT_HASH}-${TIMESTAMP}
 
-build:
-  commands:
+  build:
+    commands:
     - echo Building Docker image...
     - docker build --no-cache -t adama_internal:$IMAGE_TAG -f login-app/Dockerfile login-app/
     - docker tag adama_internal:$IMAGE_TAG $ECR_REPOSITORY:$IMAGE_TAG
     - docker tag adama_internal:$IMAGE_TAG $ECR_REPOSITORY:latest
 
-post_build:
-  commands:
+  post_build:
+    commands:
     - echo Pushing Docker image to Amazon ECR...
     - docker push $ECR_REPOSITORY:$IMAGE_TAG
     - docker push $ECR_REPOSITORY:latest
