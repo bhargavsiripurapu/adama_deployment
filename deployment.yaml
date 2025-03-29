@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: adama-app-container
-        image: 600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal:latest
+        image: 600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal:app-1
         ports:
         - containerPort: 80
