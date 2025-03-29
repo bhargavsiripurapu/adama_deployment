@@ -15,7 +15,7 @@ phases:
       - pwd
       - ls -l  # Debugging: List files to verify docker-compose.yml is present
       - echo "Logging in to Amazon ECR..."
-      - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY
       - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
 
   build:
