@@ -13,10 +13,12 @@ env:
 
 phases:
   install:
+    runtime-versions:
+      python: 3.x
     commands:
-      - echo "Installing yq (Go version)..."
-      - wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
-      - chmod +x /usr/bin/yq
+      - echo "Installing dependencies..."
+      # Install yq using pip
+      - pip install yq
 
   pre_build:
     commands:
@@ -39,8 +41,13 @@ phases:
       - echo "Pushing Docker images to ECR..."
       - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
 
-      - echo "Updating deployment.yaml with new container images..."
-      - yq eval -i ".spec.template.spec.containers[0].image = \"$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG\"" $DEPLOYMENT_FILE
+      - echo "Updating deployment.yaml with new container image..."
+      # Using sed instead of yq for more reliable operation
+      - sed -i "s|image:.*|image: $ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG|g" $DEPLOYMENT_FILE
+
+      - echo "Verifying deployment file contents..."
+      - cat $DEPLOYMENT_FILE
+
 
       - echo "Configuring kubectl for EKS..."
       - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
