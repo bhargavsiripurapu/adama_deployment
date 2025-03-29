@@ -16,8 +16,6 @@ phases:
     runtime-versions:
       python: 3.x
     commands:
-      - echo "Installing dependencies..."
-      # Install yq using pip
       - pip install yq
 
   pre_build:
@@ -33,25 +31,17 @@ phases:
     commands:
       - echo "Building Docker images..."
       - docker build --no-cache -t src-app:$IMAGE_TAG -f login-app/Dockerfile login-app/
-      - echo "Tagging images..."
       - docker tag src-app:$IMAGE_TAG "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
 
   post_build:
     commands:
       - echo "Pushing Docker images to ECR..."
       - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
-
       - echo "Updating deployment.yaml with new container image..."
-      # Using sed instead of yq for more reliable operation
       - sed -i "s|image:.*|image: $ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG|g" $DEPLOYMENT_FILE
-
-      - echo "Verifying deployment file contents..."
       - cat $DEPLOYMENT_FILE
-
-
       - echo "Configuring kubectl for EKS..."
       - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
-
       - echo "Deploying application to EKS..."
       - kubectl apply -f $DEPLOYMENT_FILE
       - kubectl apply -f $SERVICE_FILE
@@ -59,6 +49,6 @@ phases:
 
 artifacts:
   files:
-    - $DEPLOYMENT_FILE
-    - $SERVICE_FILE
-    - $INGRESS_FILE
+    - deployment.yaml
+    - service.yaml
+    - ingress.yaml
