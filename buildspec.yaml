@@ -38,6 +38,9 @@ phases:
       - echo "Updating deployment.yaml with new container images..."
       - sed -i 's@APP_IMAGE@'"$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"'@' $DEPLOYMENT_FILE
 
+      - echo "Displaying updated deployment.yaml..."
+      - cat $DEPLOYMENT_FILE
+
       - echo "Configuring kubectl for EKS..."
       - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_REGION
 
