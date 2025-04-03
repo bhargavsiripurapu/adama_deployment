@@ -30,7 +30,7 @@ phases:
   build:
     commands:
       - echo "Building Docker images..."
-      - docker build --no-cache -t src-app:$IMAGE_TAG -f login-app/Dockerfile login-app/
+      - docker build --no-cache -t src-app:$IMAGE_TAG -f Dockerfile .
       - docker tag src-app:$IMAGE_TAG "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
 
   post_build:
